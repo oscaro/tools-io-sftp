@@ -2,7 +2,8 @@
   (:require [tools.io.core :refer [register-file-pred!
                                    mk-input-stream
                                    list-files]]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import [com.jcraft.jsch JSch SftpException ChannelSftp]))
 
 ;;;
 ;;; Implementation Predicate
