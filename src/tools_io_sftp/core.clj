@@ -72,7 +72,7 @@
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
       (try
-        (->> (.ls foo (:resource conn-spec))
+        (->> (.ls conn (:resource conn-spec))
              (remove #(contains? #{"." ".."} (.getFilename %)))
              (map (fn [e] (str (:resource conn-spec)
                                "/" (.getFilename e)))))
@@ -85,7 +85,7 @@
     (with-ssh-connection [conn conn-spec]
       (try
         (let [path (:resource conn-spec)
-              r (->> (.ls foo path)
+              r (->> (.ls conn path)
                      (map (fn [e] (.getLongname e)))
                      (filter #(= \d (first %))))]
           (->> (map #(str/split % #" ") r)
@@ -98,12 +98,13 @@
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
-      ;; Do something with
+      ;; TODO
       )))
 
 (defmethod tio/mk-output-stream :sftp
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
-      ;; Do something with
-      )))
+      (tio/with-tempfile [tmp-file]
+        (.get conn (:resource conn-spec) tmp-file)
+        (io/output-stream tmp-file)))))
