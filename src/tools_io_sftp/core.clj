@@ -2,7 +2,8 @@
   (:require [tools.io.core :as tio]
             [clojure.string :as str]
             [clojure.spec.alpha :as s])
-  (:import [com.jcraft.jsch JSch SftpException ChannelSftp]))
+  (:import [com.jcraft.jsch JSch SftpException
+            ChannelSftp]))
 
 ;;; specs
 
@@ -70,15 +71,28 @@
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
-      ;; Do something with
-      )))
+      (try
+        (->> (.ls foo (:resource conn-spec))
+             (remove #(contains? #{"." ".."} (.getFilename %)))
+             (map (fn [e] (str (:resource conn-spec)
+                               "/" (.getFilename e)))))
+        (catch SftpException e
+          nil)))))
 
 (defmethod tio/list-dirs :sftp
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
-      ;; Do something with
-      )))
+      (try
+        (let [path (:resource conn-spec)
+              r (->> (.ls foo path)
+                     (map (fn [e] (.getLongname e)))
+                     (filter #(= \d (first %))))]
+          (->> (map #(str/split % #" ") r)
+               (map last)
+               (remove #(contains? #{"." ".."} %))))
+        (catch Exception e
+          nil)))))
 
 (defmethod tio/mk-input-stream :sftp
   [url & [options]]
