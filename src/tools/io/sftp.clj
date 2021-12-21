@@ -82,8 +82,10 @@
       (try
         (->> (.ls conn (:resource conn-spec))
              (remove #(contains? #{"." ".."} (.getFilename %)))
-             (map (fn [e] (str (:resource conn-spec)
-                               "/" (.getFilename e)))))
+             (map (fn [e] (if (= "/" (:resource conn-spec))
+                            (str "/" (.getFilename e))
+                            (str (:resource conn-spec)
+                                 "/" (.getFilename e))))))
         (catch SftpException e
           nil)))))
 
