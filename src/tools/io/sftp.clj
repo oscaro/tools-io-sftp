@@ -108,12 +108,18 @@
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
       ;; TODO
-      {:stream nil})))
+      (utils/with-tempfile [tmp-file]
+        (.get conn (:resource conn-spec) tmp-file)
+        {:stream (io/input-stream tmp-file)}))))
 
 (defmethod tio/mk-output-stream :sftp
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
       (utils/with-tempfile [tmp-file]
-        (.get conn (:resource conn-spec) tmp-file)
-        {:stream (io/output-stream tmp-file)}))))
+        (let [stream (io/output-stream tmp-file)]
+          (try
+            {:stream stream}
+            (finally
+              (.put conn tmp-file
+                    (:resource conn-spec)))))))))

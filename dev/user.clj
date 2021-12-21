@@ -11,5 +11,9 @@
 ;;; =======================================================
 
 (comment
-  (tio/list-dirs "sftp://demo:password@test.rebex.net:22/")
+  ;; -->
+  (tio/read-csv-file "sftp://demo:password@test.rebex.net:22/readme.txt")
+
+  (tio/write-text-file "sftp://demo:password@test.rebex.net:22/yool.txt"
+                       ["eu"])
   )
