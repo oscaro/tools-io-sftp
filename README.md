@@ -1,4 +1,4 @@
-# tools-io-sftp
+# tools-io-sftp [![Clojars Project](https://img.shields.io/clojars/v/com.oscaro/tools-io-sftp.svg)](https://clojars.org/com.oscaro/tools-io-sftp)
 
 SFTP Implementation for tools-io
 
