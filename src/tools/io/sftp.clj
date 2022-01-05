@@ -33,22 +33,22 @@
 
 ;;; Connection Helpers
 
-(def sftp-uri
-  #"^((sftp:\/\/)(\w*):(\w*)@(\w.*):(\d.)(\/(\w.*)?))")
-
 (defn extract-uri
   "Convert url to spec checked map"
   [target]
-  (if (re-matches sftp-uri target)
-    (let [[u p h po r & rest] (drop 3 (re-find sftp-uri target))
-          res (-> {:username u :password p
-                   :hostname h :port po :resource r}
-                  (update :port (fn [e] (when e (Integer/parseInt e)))))]
-      (if (s/valid? ::sftp-resource res)
-        res
-        (throw (Exception.
-                (s/explain-str ::sftp-resource res)))))
-    (throw (Exception. "not an sftp url"))))
+  (let [url (str/replace target #"sftp://" "")
+        [u & [p1 p2]] (str/split url #":" 3)
+        [h p] (-> (str/reverse p1)
+                  (str/split #"@" 2)
+                  (->> (map str/reverse)))
+        [po r] (str/split p2 #"/" 2)
+        res (-> {:username u :password p
+                 :hostname h :port po :resource r}
+                (update :port (fn [e] (when e (Integer/parseInt e)))))]
+    (if (s/valid? ::sftp-resource res)
+      res
+      (throw (Exception.
+              (s/explain-str ::sftp-resource res))))))
 
 (defmacro with-ssh-connection
   "Wrap ssh connection context inside the body
