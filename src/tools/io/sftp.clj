@@ -109,7 +109,6 @@
   [url & [options]]
   (if-let [conn-spec (extract-uri url)]
     (with-ssh-connection [conn conn-spec]
-      ;; TODO
       (utils/with-tempfile [tmp-file]
         (.get conn (:resource conn-spec) tmp-file)
         {:stream (io/input-stream tmp-file)}))))
