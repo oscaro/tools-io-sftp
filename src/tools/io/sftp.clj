@@ -43,7 +43,7 @@
                   (->> (map str/reverse)))
         [po r] (str/split p2 #"/" 2)
         res (-> {:username u :password p
-                 :hostname h :port po :resource r}
+                 :hostname h :port po :resource (str "/" r)}
                 (update :port (fn [e] (when e (Integer/parseInt e)))))]
     (if (s/valid? ::sftp-resource res)
       res
