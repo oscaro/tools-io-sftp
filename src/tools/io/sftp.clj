@@ -33,6 +33,25 @@
 
 ;;; Connection Helpers
 
+(defn- is-password-pubkey?
+  "Since dispatch is made only in
+   the url we need to store that information inside.
+
+  Assuming password don't contains special
+  characters, we'll use an specific char to flag
+  pubkey usage.
+
+  Note: THIS IS A VERY BAD IMPLEMENTATION, but probably
+  the only hacky way to do this (since I need to have
+  this feature realy quickly I don't spent to much time
+  to find a clever approach tbh).
+
+  Using bullet char as flag:
+    - `UTF-8`: 0xE2 0x80 0xA2
+    - `UTF-16`: 0x2022"
+  [pwd]
+  (str/starts-with? pwd "•"))
+
 (defn extract-uri
   "Convert url to spec checked map"
   [target]
@@ -50,20 +69,27 @@
       (throw (Exception.
               (s/explain-str ::sftp-resource res))))))
 
+
 (defmacro with-ssh-connection
   "Wrap ssh connection context inside the body
    then gently close connection after evaluation"
   [[bname spec]  & body]
   `(let [server-spec# ~spec
-         session# (doto (.getSession (JSch.)
-                                     (:username server-spec#)
-                                     (:hostname server-spec#)
-                                     (:port server-spec#))
-                    (.setConfig "StrictHostKeyChecking" "no")
-                    (.setConfig "Compression"           "no")
-                    (.setConfig "ControlMaster"         "no")
+         session# (cond-> (.getSession (JSch.)
+                                       (:username server-spec#)
+                                       (:hostname server-spec#)
+                                       (:port server-spec#))
+                    (is-password-pubkey? (:password server-spec#))
+                    (.addIdentity (apply str (rest (:password server-spec#))))
+                    
+                    (not (is-password-pubkey? (:password server-spec#)))
                     (.setPassword (:password server-spec#))
-                    (.connect))
+
+                    :all (doto
+                             (.setConfig "StrictHostKeyChecking" "no")
+                           (.setConfig "Compression"           "no")
+                           (.setConfig "ControlMaster"         "no")
+                           (.connect)))
          ~bname (doto (.openChannel session# "sftp")
                   (.connect))]
      (try

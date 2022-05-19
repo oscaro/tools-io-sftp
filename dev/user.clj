@@ -17,3 +17,5 @@
   (tio/read-text-file "sftp://demo:password@test.rebex.net:22/readme.txt")
 
   )
+
+;;; Pubkey
