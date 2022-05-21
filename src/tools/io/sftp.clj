@@ -91,8 +91,8 @@
   [[bname spec]  & body]
   `(let [server-spec# ~spec
          session-builder# (if (is-password-pubkey? (:password server-spec#))
-                            (-> (JSch.)
-                                (.addIdentity (apply str (rest (:password server-spec#)))))
+                            (doto (JSch.)
+                              (.addIdentity (apply str (rest (:password server-spec#)))))
                             (JSch.))
          session# (doto (.getSession session-builder#
                                      (:username server-spec#)
