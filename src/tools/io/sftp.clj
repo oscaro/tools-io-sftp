@@ -5,8 +5,7 @@
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log])
-  (:import [com.jcraft.jsch JSch SftpException
-            ChannelSftp]))
+  (:import [com.jcraft.jsch JSch SftpException]))
 
 ;;; specs
 
@@ -33,7 +32,7 @@
 
 ;;; Connection Helpers
 
-(defn- is-password-pubkey?
+(defn is-password-pubkey?
   "Since dispatch is made only in
    the url we need to store that information inside.
 
@@ -42,15 +41,32 @@
   pubkey usage.
 
   Note: THIS IS A VERY BAD IMPLEMENTATION, but probably
-  the only hacky way to do this (since I need to have
-  this feature realy quickly I don't spent to much time
-  to find a clever approach tbh).
+    the only hacky way to do this (since I need to have
+    this feature realy quickly I don't spent to much time
+    to find a clever approach tbh).
+
+  Note 2: Recent versions of OpenSSH (7.8 and newer) generate
+     keys in new OpenSSH format by default, which starts with:
+
+     `-----BEGIN OPENSSH PRIVATE KEY-----`
+
+     JSch does not support this key format.
+     You can use ssh-keygen to convert the key to the classic OpenSSH format:
+
+     $ ssh-keygen -p -f file -m pem -P passphrase -N passphrase
+
+     If you are creating a new key with ssh-keygen, just add -m PEM to
+     generate the new key in the classic format:
+
+     $ ssh-keygen -m PEM
 
   Using bullet char as flag:
     - `UTF-8`: 0xE2 0x80 0xA2
     - `UTF-16`: 0x2022"
   [pwd]
   (str/starts-with? pwd "•"))
+
+(def is-password (comp not is-password-pubkey?))
 
 (defn extract-uri
   "Convert url to spec checked map"
@@ -69,27 +85,25 @@
       (throw (Exception.
               (s/explain-str ::sftp-resource res))))))
 
-
 (defmacro with-ssh-connection
   "Wrap ssh connection context inside the body
    then gently close connection after evaluation"
   [[bname spec]  & body]
   `(let [server-spec# ~spec
-         session# (cond-> (.getSession (JSch.)
-                                       (:username server-spec#)
-                                       (:hostname server-spec#)
-                                       (:port server-spec#))
-                    (is-password-pubkey? (:password server-spec#))
-                    (.addIdentity (apply str (rest (:password server-spec#))))
-                    
-                    (not (is-password-pubkey? (:password server-spec#)))
-                    (.setPassword (:password server-spec#))
-
-                    :all (doto
-                             (.setConfig "StrictHostKeyChecking" "no")
-                           (.setConfig "Compression"           "no")
-                           (.setConfig "ControlMaster"         "no")
-                           (.connect)))
+         session-builder# (if (is-password-pubkey? (:password server-spec#))
+                            (-> (JSch.)
+                                (.addIdentity (apply str (rest (:password server-spec#)))))
+                            (JSch.))
+         session# (doto (.getSession session-builder#
+                                     (:username server-spec#)
+                                     (:hostname server-spec#)
+                                     (:port server-spec#))
+                    (cond-> (is-password (:password server-spec#))
+                      (.setPassword (:password server-spec#)))
+                    (.setConfig "StrictHostKeyChecking" "no")
+                    (.setConfig "Compression"           "no")
+                    (.setConfig "ControlMaster"         "no")
+                    (.connect))
          ~bname (doto (.openChannel session# "sftp")
                   (.connect))]
      (try
@@ -109,9 +123,9 @@
         (->> (.ls conn (:resource conn-spec))
              (remove #(contains? #{"." ".."} (.getFilename %)))
              (map (fn [e] (if (= "/" (:resource conn-spec))
-                            (str "/" (.getFilename e))
-                            (str (:resource conn-spec)
-                                 "/" (.getFilename e))))))
+                           (str "/" (.getFilename e))
+                           (str (:resource conn-spec)
+                                "/" (.getFilename e))))))
         (catch SftpException e
           nil)))))
 
