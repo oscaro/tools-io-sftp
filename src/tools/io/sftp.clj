@@ -66,7 +66,7 @@
   [pwd]
   (str/starts-with? pwd "•"))
 
-(def is-password (comp not is-password-pubkey?))
+(def is-password? (comp not is-password-pubkey?))
 
 (defn extract-uri
   "Convert url to spec checked map"
@@ -98,13 +98,14 @@
                                      (:username server-spec#)
                                      (:hostname server-spec#)
                                      (:port server-spec#))
-                    (cond-> (is-password (:password server-spec#))
-                      (.setPassword (:password server-spec#)))
+                    (cond-> (is-password? (:password server-spec#))
+                      (.setPassword (:password server-spec#))
+                      (is-password-pubkey? (:password server-spec#))
+                      (.setConfig  "PreferredAuthentications"
+                                   "publickey"))
                     (.setConfig "StrictHostKeyChecking" "no")
                     (.setConfig "Compression"           "no")
                     (.setConfig "ControlMaster"         "no")
-                    (.setConfig  "PreferredAuthentications"
-                                 "publickey,password")
                     (.connect))
          ~bname (doto (.openChannel session# "sftp")
                   (.connect))]

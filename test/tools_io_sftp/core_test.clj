@@ -29,4 +29,4 @@
   (testing "public key auth is working"
     (let [url "sftp://fixture:•dev-resources/fixture_rsa@localhost:2222/etc/motd"
           result (tio/read-text-file url)]
-      (is (= "foo" result)))))
+      (is (= "Welcome to OpenSSH Server" (first result))))))
