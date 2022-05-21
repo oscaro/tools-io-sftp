@@ -36,6 +36,27 @@ Import implementations to your namespace:
 
 ```
 
+### Testing
+
+1. Bootstrap a local ssh daemon
+
+```bash
+$ sudo docker-compose up -d
+```
+
+2. Launch Tests
+
+```bash
+$ lein test
+```
+
+## Changelog
+
+### 0.1.3-SNAPSHOT
+	- Public key support
+### 0.1.2
+	- First stable version
+
 ## License
 
 Copyright © 2021 oscaro

@@ -11,7 +11,8 @@ services:
       - TZ=Europe/Paris
       - PUBLIC_KEY_FILE=/app/fixture_rsa.pub
       - SUDO_ACCESS=false
-      - PASSWORD_ACCESS=false
+      - PASSWORD_ACCESS=true
+      - USER_PASSWORD=h4ckm3
       - USER_NAME=fixture
     ports:
       - 2222:2222

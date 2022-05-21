@@ -103,6 +103,8 @@
                     (.setConfig "StrictHostKeyChecking" "no")
                     (.setConfig "Compression"           "no")
                     (.setConfig "ControlMaster"         "no")
+                    (.setConfig  "PreferredAuthentications"
+                                 "publickey,password")
                     (.connect))
          ~bname (doto (.openChannel session# "sftp")
                   (.connect))]

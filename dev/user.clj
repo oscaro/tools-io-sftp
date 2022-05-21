@@ -19,8 +19,10 @@
   (tio/read-text-file "sftp://demo:password@test.rebex.net:22/readme.txt")
   (sftp/extract-uri "sftp://demo:password@test.rebex.net:22/readme.txt")
 
-;;; Pubkey
+  ;;; Pubkey
 
   (tio/read-text-file "sftp://demo:•dev-resources/fixture_rsa@test.rebex.net:22/readme.txt")
   (sftp/extract-uri "sftp://demo:•dev-resources/fixture_rsa@test.rebex.net:22/readme.txt")
+
+
   )
