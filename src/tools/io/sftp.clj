@@ -92,7 +92,7 @@
   `(let [server-spec# ~spec
          session-builder# (if (is-password-pubkey? (:password server-spec#))
                             (let [pstring# (apply str (rest (:password server-spec#)))
-                                  [path# password#] (str/split pstring# #"~")
+                                  [path# password#] (str/split pstring# #"~" 2)
                                   password# (if (nil? password#) "" password#)]
                               (doto (JSch.)
                                 (.addIdentity path# password#)))

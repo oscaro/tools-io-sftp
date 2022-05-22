@@ -24,12 +24,15 @@
   (let [builder (doto (JSch.)
                   (.addIdentity "dev-resources/fixture_rsa" ""))]
     (doto (.getSession builder "fixture" "127.0.0.1" 2222)
+      (.setConfig "PubkeyAcceptedKeyTypes" "ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa")
       (.setConfig "StrictHostKeyChecking" "no")
-      (.setConfig  "PreferredAuthentications"
-                   "password")
-      (.setConfig  "PreferredAuthentications"
-                   "publickey")
-      (.setConfig "PubkeyAcceptedAlgorithms" "ssh-rsa")
+      (.connect)))
+
+  (let [builder (doto (JSch.)
+                  (.addIdentity "dev-resources/fixture_encrypted_rsa" "mypass"))]
+    (doto (.getSession builder "fixture" "127.0.0.1" 2222)
+      (.setConfig "StrictHostKeyChecking" "no")
+      (.setConfig "PubkeyAcceptedKeyTypes" "ecdsa-sha2-nistp256,ecdsa-sha2-nistp384")
       (.connect)))
 
   (tio/read-text-file "sftp://demo:•dev-resources/fixture_rsa@test.rebex.net:22/readme.txt")

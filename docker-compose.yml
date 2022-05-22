@@ -2,14 +2,14 @@ version: '3.7'
 
 services:
   openssh-server:
-    image: lscr.io/linuxserver/openssh-server:latest
+    image: lscr.io/linuxserver/openssh-server:version-8.6_p1-r3
     container_name: openssh-server
     hostname: openssh-server
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Paris
-      - PUBLIC_KEY_FILE=/app/fixture_rsa.pub
+      - PUBLIC_KEY_DIR=/keyz
       - SUDO_ACCESS=false
       - PASSWORD_ACCESS=true
       - USER_PASSWORD=h4ckm3
@@ -17,5 +17,5 @@ services:
     ports:
       - 2222:2222
     volumes:
-      - ./dev-resources:/app
+      - ./dev-resources:/keyz
     restart: unless-stopped

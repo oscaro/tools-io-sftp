@@ -29,4 +29,12 @@
   (testing "public key auth is working"
     (let [url "sftp://fixture:•dev-resources/fixture_rsa@localhost:2222/etc/motd"
           result (tio/read-text-file url)]
-      (is (= "Welcome to OpenSSH Server" (first result))))))
+      (is (= "Welcome to OpenSSH Server" (first result)))))
+  (testing "public key auth is working with password encryption"
+    (let [url "sftp://fixture:•dev-resources/fixture_encrypted_rsa~mypass@localhost:2222/etc/motd"
+          result (tio/read-text-file url)]
+      (is (= "Welcome to OpenSSH Server" (first result)))))
+  (testing "public key auth is throwing exception on wrong path"
+    (let [url "sftp://fixture:•dev-resources/fixture_encrypted_rsa~br0k3n@localhost:2222/etc/motd"]
+      (is (thrown? com.jcraft.jsch.JSchException
+                   (tio/read-text-file url))))))
