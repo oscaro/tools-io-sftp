@@ -66,8 +66,8 @@ PubkeyAcceptedKeyTypes=+ssh-rsa
 
 ## Changelog
 
-### 0.1.3-SNAPSHOT
-	- Public key support
+### 0.1.3
+	- Public key suppord & password key decryption
 ### 0.1.2
 	- First stable version
 
