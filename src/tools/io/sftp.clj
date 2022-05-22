@@ -91,8 +91,11 @@
   [[bname spec]  & body]
   `(let [server-spec# ~spec
          session-builder# (if (is-password-pubkey? (:password server-spec#))
-                            (doto (JSch.)
-                              (.addIdentity (apply str (rest (:password server-spec#)))))
+                            (let [pstring# (apply str (rest (:password server-spec#)))
+                                  [path# password#] (str/split pstring# #"~")
+                                  password# (if (nil? password#) "" password#)]
+                              (doto (JSch.)
+                                (.addIdentity path# password#)))
                             (JSch.))
          session# (doto (.getSession session-builder#
                                      (:username server-spec#)

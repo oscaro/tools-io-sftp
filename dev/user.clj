@@ -19,17 +19,18 @@
 
   (tio/read-text-file "sftp://demo:password@test.rebex.net:22/readme.txt")
   (sftp/extract-uri "sftp://demo:password@test.rebex.net:22/readme.txt")
-
   ;;; Pubkey
 
   (let [builder (doto (JSch.)
-                  (.addIdentity "dev-resources/fixture_rsa"))]
-    (doto (.getSession builder "fixture" "localhost" 2222)
+                  (.addIdentity "dev-resources/fixture_rsa" ""))]
+    (doto (.getSession builder "fixture" "127.0.0.1" 2222)
       (.setConfig "StrictHostKeyChecking" "no")
+      (.setConfig  "PreferredAuthentications"
+                   "password")
       (.setConfig  "PreferredAuthentications"
                    "publickey")
       (.setConfig "PubkeyAcceptedAlgorithms" "ssh-rsa")
       (.connect)))
-  
+
   (tio/read-text-file "sftp://demo:•dev-resources/fixture_rsa@test.rebex.net:22/readme.txt")
   (sftp/extract-uri "sftp://demo:•dev-resources/fixture_rsa@test.rebex.net:22/readme.txt"))
