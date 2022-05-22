@@ -5,8 +5,7 @@
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log])
-  (:import [com.jcraft.jsch JSch SftpException
-            ChannelSftp]))
+  (:import [com.jcraft.jsch JSch SftpException]))
 
 ;;; specs
 
@@ -33,6 +32,42 @@
 
 ;;; Connection Helpers
 
+(defn is-password-pubkey?
+  "Since dispatch is made only in
+   the url we need to store that information inside.
+
+  Assuming password don't contains special
+  characters, we'll use an specific char to flag
+  pubkey usage.
+
+  Note: THIS IS A VERY BAD IMPLEMENTATION, but probably
+    the only hacky way to do this (since I need to have
+    this feature realy quickly I don't spent to much time
+    to find a clever approach tbh).
+
+  Note 2: Recent versions of OpenSSH (7.8 and newer) generate
+     keys in new OpenSSH format by default, which starts with:
+
+     `-----BEGIN OPENSSH PRIVATE KEY-----`
+
+     JSch does not support this key format.
+     You can use ssh-keygen to convert the key to the classic OpenSSH format:
+
+     $ ssh-keygen -p -f file -m pem -P passphrase -N passphrase
+
+     If you are creating a new key with ssh-keygen, just add -m PEM to
+     generate the new key in the classic format:
+
+     $ ssh-keygen -m PEM
+
+  Using bullet char as flag:
+    - `UTF-8`: 0xE2 0x80 0xA2
+    - `UTF-16`: 0x2022"
+  [pwd]
+  (str/starts-with? pwd "•"))
+
+(def is-password? (comp not is-password-pubkey?))
+
 (defn extract-uri
   "Convert url to spec checked map"
   [target]
@@ -55,14 +90,25 @@
    then gently close connection after evaluation"
   [[bname spec]  & body]
   `(let [server-spec# ~spec
-         session# (doto (.getSession (JSch.)
+         session-builder# (if (is-password-pubkey? (:password server-spec#))
+                            (let [pstring# (apply str (rest (:password server-spec#)))
+                                  [path# password#] (str/split pstring# #"~" 2)
+                                  password# (if (nil? password#) "" password#)]
+                              (doto (JSch.)
+                                (.addIdentity path# password#)))
+                            (JSch.))
+         session# (doto (.getSession session-builder#
                                      (:username server-spec#)
                                      (:hostname server-spec#)
                                      (:port server-spec#))
+                    (cond-> (is-password? (:password server-spec#))
+                      (.setPassword (:password server-spec#))
+                      (is-password-pubkey? (:password server-spec#))
+                      (.setConfig  "PreferredAuthentications"
+                                   "publickey"))
                     (.setConfig "StrictHostKeyChecking" "no")
                     (.setConfig "Compression"           "no")
                     (.setConfig "ControlMaster"         "no")
-                    (.setPassword (:password server-spec#))
                     (.connect))
          ~bname (doto (.openChannel session# "sftp")
                   (.connect))]
@@ -83,9 +129,9 @@
         (->> (.ls conn (:resource conn-spec))
              (remove #(contains? #{"." ".."} (.getFilename %)))
              (map (fn [e] (if (= "/" (:resource conn-spec))
-                            (str "/" (.getFilename e))
-                            (str (:resource conn-spec)
-                                 "/" (.getFilename e))))))
+                           (str "/" (.getFilename e))
+                           (str (:resource conn-spec)
+                                "/" (.getFilename e))))))
         (catch SftpException e
           nil)))))
 

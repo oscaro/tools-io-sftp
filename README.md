@@ -36,6 +36,41 @@ Import implementations to your namespace:
 
 ```
 
+### Testing
+
+1. Bootstrap a local ssh daemon
+
+```bash
+$ sudo docker-compose up -d
+```
+
+2. Launch Tests
+
+```bash
+$ lein test
+```
+
+## Important SSH Notes
+
+Since version [8.8](https://www.openssh.com/txt/release-8.8),  old ssh-rsa algorithm 
+was disabled default, and other clients are using a newer protocol.
+
+To use old keys, ensure that the daemon have this support
+in his configuration:
+
+```bash
+$ cat /etc/ssh/sshd_config
+PubkeyAuthentication yes
+PubkeyAcceptedKeyTypes=+ssh-rsa
+```
+
+## Changelog
+
+### 0.1.3-SNAPSHOT
+	- Public key support
+### 0.1.2
+	- First stable version
+
 ## License
 
 Copyright © 2021 oscaro
