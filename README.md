@@ -34,6 +34,13 @@ Import implementations to your namespace:
 (tio/read-text-file "sftp://demo:password@test.rebex.net:22/readme.txt")
 ;; => ("Welcome," "Your are connected to" ...)
 
+;; Read file with private key
+(tio/read-text-file "sftp://fixture:•dev-resources/fixture_rsa@localhost:2222/etc/motd")
+;; => "yo, from the key"
+
+;; With password encrypted password (separated by ~)
+(tio/read-text-file "sftp://fixture:•dev-resources/fixture_rsa~my_key_password@localhost:2222/etc/motd")
+;; => "yo, from the key and password"
 ```
 
 ### Testing
@@ -66,8 +73,8 @@ PubkeyAcceptedKeyTypes=+ssh-rsa
 
 ## Changelog
 
-### 0.1.3-SNAPSHOT
-	- Public key support
+### 0.1.3
+	- Public key suppord & password key decryption
 ### 0.1.2
 	- First stable version
 
