@@ -22,9 +22,10 @@ jobs:
     - name: Fire up OpenSSH Server
       run: docker-compose up -d
     - name: Run tests
-      run: lein test
-    - uses: jlesquembre/clojars-publish-action@0.3
-      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' 
+      run: lein test  
+    - name: Deploy to Clojars
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel'
+      run: lein deploy
       env:
         CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
         CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
